@@ -1,39 +1,76 @@
-// import HeaderHome from "./components/HeaderHome";
-// import RestaurantCard from "./components/RestaurantCard";
-// import { Cuisine, Location, PRICE, PrismaClient, Review } from "@prisma/client";
-import prisma from "../prisma.config";
 import HeaderHome from "./components/HeaderHome";
+import { prisma } from "../lib/prisma";
+import BranchCard from "./components/BranchCard";
+
 export interface IBranch {
-    
-
-
+    branchId: number;
+    city: string;
+    area: string;
+    restaurantId: number;
+    restaurant: {
+        name: string;
+        description: string | null;
+        priceRange: string | null;
+        openingTime: Date | null;
+        closingTime: Date | null;
+        status: string | null;
+    };
+    cuisines: Array<{
+        cuisine: {
+            name: string;
+        };
+    }>;
+    reviews: Array<{
+        rating: number;
+    }>;
 }
-const fetchRestaurants = async (): Promise<IBranch[]> => {
-    const restaurants = await prisma.Branch.findMany({
+
+const fetchBranches = async (): Promise<IBranch[]> => {
+    const branches = await prisma.branch.findMany({
         select: {
             branchId: true,
             city: true,
             area: true,
             restaurantId: true,
-            
+            restaurant: {
+                select: {
+                    name: true,
+                    description: true,
+                    priceRange: true,
+                    openingTime: true,
+                    closingTime: true,
+                    status: true,
+                },
+            },
+            cuisines: {
+                select: {
+                    cuisine: {
+                        select: {
+                            name: true,
+                        },
+                    },
+                },
+            },
+            reviews: {
+                select: {
+                    rating: true,
+                },
+            },
         },
     });
-    return restaurants;
-
+    return branches;
 };
-export default /*async*/ function Home() {
-    // const restaurants = await fetchRestaurants();
+
+export default async function Home() {
+    const branches = await fetchBranches();
     return (
         <main>
             <HeaderHome />
-            {/* <div className="grid grid-cols-fluid p-5 gap-5 ">
-                {restaurants?.map((restaurant) => (
-                    <RestaurantCard
-                        restaurant={restaurant}
-                        key={restaurant.id}
-                    />
+            <div className="grid grid-cols-fluid p-5 gap-5 ">
+                {branches?.map((branch) => (
+                    <BranchCard key={branch.branchId} branch={branch}/>
                 ))}
-            </div> */}
+            </div>
         </main>
     );
 }
